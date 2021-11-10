@@ -22,6 +22,7 @@ async function run() {
     const database = client.db("drones_world");
     const productsCollection = database.collection("products");
     const ordersCollection = database.collection("orders");
+    const usersCollection = database.collection("users");
 
     //   add a product on db
     app.post("/addProduct", async (req, res) => {
@@ -48,7 +49,6 @@ async function run() {
     app.post("/addOrder", async (req, res) => {
       const order = req.body;
       const results = await ordersCollection.insertOne(order);
-      console.log(results);
       res.json(results);
     });
     // get all products from db
@@ -56,7 +56,13 @@ async function run() {
       const cursor = await ordersCollection.find({}).toArray();
       res.send(cursor);
     });
-
+    // delete a product from db
+    app.delete("/delProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productsCollection.deleteOne(query);
+      res.json(result);
+    });
     // get my order from db
     app.get("/myOrder/:email", async (req, res) => {
       const email = req.params.email;
@@ -70,7 +76,6 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await ordersCollection.deleteOne(query);
       res.json(result);
-      console.log(result);
     });
 
     // update order status on db
@@ -87,6 +92,22 @@ async function run() {
       };
       const approveStatus = await ordersCollection.updateOne(filter, updateDoc);
       res.json(approveStatus);
+    });
+
+    // save users info on db
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      const results = await usersCollection.insertOne(user);
+      res.json(results);
+    });
+
+    // set admin role on db
+    app.put("/admin", async (req, res) => {
+      const user = req.body;
+      const filter = { email: user.email };
+      const updateDoc = { $set: { role: "admin" } };
+      const results = await usersCollection.updateOne(filter, updateDoc);
+      res.json(results);
     });
   } finally {
     //   await client.close();
