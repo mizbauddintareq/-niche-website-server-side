@@ -23,6 +23,7 @@ async function run() {
     const productsCollection = database.collection("products");
     const ordersCollection = database.collection("orders");
     const usersCollection = database.collection("users");
+    const reviewsCollection = database.collection("reviews");
 
     //   add a product on db
     app.post("/addProduct", async (req, res) => {
@@ -34,6 +35,20 @@ async function run() {
     // get all products from db
     app.get("/allProducts", async (req, res) => {
       const cursor = await productsCollection.find({}).toArray();
+      res.send(cursor);
+    });
+
+    // add review on db
+    app.post("/review", async (req, res) => {
+      const review = req.body;
+      const results = await reviewsCollection.insertOne(review);
+      res.json(results);
+      console.log(results);
+    });
+
+    // get all reviews from db
+    app.get("/reviews", async (req, res) => {
+      const cursor = await reviewsCollection.find({}).toArray();
       res.send(cursor);
     });
 
@@ -108,6 +123,18 @@ async function run() {
       const updateDoc = { $set: { role: "admin" } };
       const results = await usersCollection.updateOne(filter, updateDoc);
       res.json(results);
+    });
+
+    // check admin or not
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let isAdmin = false;
+      if (user?.role === "admin") {
+        isAdmin = true;
+      }
+      res.json({ admin: isAdmin });
     });
   } finally {
     //   await client.close();
